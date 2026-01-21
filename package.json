@@ -1,0 +1,26 @@
+{
+  "name": "transportation",
+  "version": "1.0.0",
+  "description": "i want to know how good is  going to a specifc location in a specific time using a specific method of transportation.",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MohamedHassan-17/Transportation.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/MohamedHassan-17/Transportation/issues"
+  },
+  "homepage": "https://github.com/MohamedHassan-17/Transportation#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "node-fetch": "^2.7.0",
+    "openrouteservice-js": "^0.4.1"
+  }
+}
