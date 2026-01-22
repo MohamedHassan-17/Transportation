@@ -3,25 +3,35 @@ const weatherDiv = document.getElementById("weather");
 const scoreDiv = document.getElementById("score");
 
 // button click
-document.getElementById("checkBtn").addEventListener("click", () => {
-  const input = document.getElementById("coordsInput").value.trim();
+document.getElementById("checkBtn").addEventListener("click", async () => {
+  const place = document.getElementById("placeInput").value.trim();
 
-  if (!input.includes(",")) {
-    alert("Use format: latitude,longitude");
+  if (!place) {
+    alert("Please enter a place name");
     return;
   }
 
-  const [latStr, lonStr] = input.split(",");
-  const lat = parseFloat(latStr);
-  const lon = parseFloat(lonStr);
+  try {
+    const geoRes = await fetch(`/geocode?place=${encodeURIComponent(place)}`);
+    const geoData = await geoRes.json();
 
-  if (isNaN(lat) || isNaN(lon)) {
-    alert("Coordinates must be numbers");
-    return;
+    if (geoData.error) {
+      alert(geoData.error);
+      return;
+    }
+
+    const { lat, lon } = geoData;
+
+    const weatherRes = await fetch(`/weather?lat=${lat}&lon=${lon}`);
+    const weatherData = await weatherRes.json();
+
+    checkWeather(weatherData);
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong");
   }
-
-  getWeather(lat, lon);
 });
+
 
 // fetch weather
 async function getWeather(lat, lon) {
