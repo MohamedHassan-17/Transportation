@@ -1,81 +1,117 @@
-let weatherInfo;
+// ===============================
+// DOM ELEMENTS
+// ===============================
 const weatherDiv = document.getElementById("weather");
 const scoreDiv = document.getElementById("score");
+const checkBtn = document.getElementById("checkBtn");
 
-// button click
-document.getElementById("checkBtn").addEventListener("click", async () => {
-  const place = document.getElementById("placeInput").value.trim();
+// ===============================
+// BUTTON CLICK
+// ===============================
+checkBtn.addEventListener("click", async () => {
+  const startPlace = document.getElementById("startInput").value.trim();
+  const endPlace = document.getElementById("endInput").value.trim();
 
-  if (!place) {
-    alert("Please enter a place name");
+  if (!startPlace || !endPlace) {
+    alert("Please enter both start and end locations");
     return;
   }
 
   try {
-    const geoRes = await fetch(`/geocode?place=${encodeURIComponent(place)}`);
-    const geoData = await geoRes.json();
+    // -------------------------------
+    // GEOCODE BOTH LOCATIONS
+    // -------------------------------
+    const [startGeoRes, endGeoRes] = await Promise.all([
+      fetch(`/geocode?place=${encodeURIComponent(startPlace)}`),
+      fetch(`/geocode?place=${encodeURIComponent(endPlace)}`)
+    ]);
 
-    if (geoData.error) {
-      alert(geoData.error);
+    const startGeo = await startGeoRes.json();
+    const endGeo = await endGeoRes.json();
+
+    if (startGeo.error) {
+      alert(`Start location error: ${startGeo.error}`);
       return;
     }
 
-    const { lat, lon } = geoData;
+    if (endGeo.error) {
+      alert(`End location error: ${endGeo.error}`);
+      return;
+    }
 
-    const weatherRes = await fetch(`/weather?lat=${lat}&lon=${lon}`);
-    const weatherData = await weatherRes.json();
+    // -------------------------------
+    // FETCH WEATHER FOR BOTH POINTS
+    // -------------------------------
+    const [startWeatherRes, endWeatherRes] = await Promise.all([
+      fetch(`/weather?lat=${startGeo.lat}&lon=${startGeo.lon}`),
+      fetch(`/weather?lat=${endGeo.lat}&lon=${endGeo.lon}`)
+    ]);
 
-    checkWeather(weatherData);
+    const startWeather = await startWeatherRes.json();
+    const endWeather = await endWeatherRes.json();
+
+    // -------------------------------
+    // CALCULATE SCORES
+    // -------------------------------
+    const startScore = calculateSafetyScore(startWeather);
+    const endScore = calculateSafetyScore(endWeather);
+    const averageScore = Math.round((startScore + endScore) / 2);
+
+    // -------------------------------
+    // DISPLAY RESULTS
+    // -------------------------------
+    weatherDiv.innerHTML = `
+      <h2>Start Location Weather</h2>
+      <p><strong>Description:</strong> ${startWeather.weather[0].description}</p>
+      <p><strong>Temperature:</strong> ${startWeather.main.temp} °C</p>
+      <p><strong>Visibility:</strong> ${startWeather.visibility} meters</p>
+      <p><strong>Wind Speed:</strong> ${startWeather.wind?.speed} m/s</p>
+      <p><strong>Rain (1h):</strong> ${startWeather.rain?.["1h"] || 0} mm</p>
+
+      <h2>End Location Weather</h2>
+      <p><strong>Description:</strong> ${endWeather.weather[0].description}</p>
+      <p><strong>Temperature:</strong> ${endWeather.main.temp} °C</p>
+      <p><strong>Visibility:</strong> ${endWeather.visibility} meters</p>
+      <p><strong>Wind Speed:</strong> ${endWeather.wind?.speed} m/s</p>
+      <p><strong>Rain (1h):</strong> ${endWeather.rain?.["1h"] || 0} mm</p>
+    `;
+
+    scoreDiv.innerHTML = `
+      <h2>Start Safety Score: ${startScore}</h2>
+      <h2>End Safety Score: ${endScore}</h2>
+      <h1>Average Route Safety: ${averageScore}</h1>
+    `;
+
   } catch (err) {
     console.error(err);
-    alert("Something went wrong");
+    alert("Something went wrong while fetching data");
   }
 });
 
-
-// fetch weather
-async function getWeather(lat, lon) {
-  const res = await fetch(`/weather?lat=${lat}&lon=${lon}`);
-  const data = await res.json();
-
-  console.log("WEATHER:", data);
-  checkWeather(data);
-}
-
-// calculate & display weather + score
-function checkWeather(data) {
+// ===============================
+// SAFETY SCORE CALCULATOR
+// ===============================
+function calculateSafetyScore(data) {
   let score = 100;
 
-  const weatherDescription = data.weather[0].description;
-  const temperatureC = data.main.temp;
-  const visibility = data.visibility;
-  const windSpeed = data.wind.speed;
-  const rain1h = data.rain ? data.rain["1h"] || 0 : 0;
+  const visibility = data.visibility ?? 0;
+  const windSpeed = data.wind?.speed ?? 0;
+  const rain1h = data.rain?.["1h"] ?? 0;
 
-  weatherDiv.innerHTML = `
-    <h2>Current Weather: ${weatherDescription}</h2>
-    <h2>Temperature: ${temperatureC} °C</h2>
-    <h2>Visibility: ${visibility} meters</h2>
-    <h2>Wind Speed: ${windSpeed} m/s</h2>
-    <h2>Rain (last 1h): ${rain1h} mm</h2>
-  `;
-
-  // visibility
+  // Visibility penalties
   if (visibility < 3000) score -= 45;
   else if (visibility < 5000) score -= 20;
   else if (visibility < 8000) score -= 5;
 
-  // wind
+  // Wind penalties
   if (windSpeed > 10) score -= 45;
   else if (windSpeed >= 7) score -= 25;
   else if (windSpeed >= 4) score -= 10;
 
-  // rain
+  // Rain penalties
   if (rain1h > 2) score -= 40;
   else if (rain1h > 1) score -= 20;
   else if (rain1h > 0.5) score -= 10;
 
-  score = Math.max(0, score);
-
-  scoreDiv.innerHTML = `<h2>Safety Score: ${score}</h2>`;
+  return Math.max(0, score);
 }
