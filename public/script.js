@@ -56,6 +56,16 @@ checkBtn.addEventListener("click", async () => {
     const startScore = calculateSafetyScore(startWeather);
     const endScore = calculateSafetyScore(endWeather);
     const averageScore = Math.round((startScore + endScore) / 2);
+    const distance = Distance(startGeo, endGeo);
+    let adjustedScore = 0;
+    if (distance < 200) {
+      // Adjust score for short distances
+      
+      adjustedScore = averageScore - 50;
+    }
+    else{
+      adjustedScore = averageScore - (distance / 10);
+    }
 
     // -------------------------------
     // DISPLAY RESULTS
@@ -74,12 +84,13 @@ checkBtn.addEventListener("click", async () => {
       <p><strong>Visibility:</strong> ${endWeather.visibility} meters</p>
       <p><strong>Wind Speed:</strong> ${endWeather.wind?.speed} m/s</p>
       <p><strong>Rain (1h):</strong> ${endWeather.rain?.["1h"] || 0} mm</p>
+
+      <h2>Distance between locations: ${distance.toFixed(2)} km</h2>
     `;
 
     scoreDiv.innerHTML = `
-      <h2>Start Safety Score: ${startScore}</h2>
-      <h2>End Safety Score: ${endScore}</h2>
-      <h1>Average Route Safety: ${averageScore}</h1>
+      
+      <h1> Route Safety: ${adjustedScore}</h1>
     `;
 
   } catch (err) {
@@ -87,6 +98,31 @@ checkBtn.addEventListener("click", async () => {
     alert("Something went wrong while fetching data");
   }
 });
+
+//calcute distance between two coordinates
+function Distance(coords1, coords2) {
+  function toRad(x) {
+    return (x * Math.PI) / 180;
+  }
+
+  const lat1 = coords1.lat;
+  const lon1 = coords1.lon;
+  const lat2 = coords2.lat;
+  const lon2 = coords2.lon;
+
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return c * 6371; // Earth radius in kilometers
+}
 
 // ===============================
 // SAFETY SCORE CALCULATOR

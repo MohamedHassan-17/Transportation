@@ -1,43 +1,100 @@
-# 🚦 Transportation Weather & Safety Scorer
+Transportation Safety Analyzer
 
-This is a lightweight Node.js + Express app that helps determine **how safe it is to travel** based on:
-- Weather conditions (from OpenWeather)
-- Distance and routing (from OpenRouteService)
-- User-entered coordinates or place names
-- A customizable safety score (e.g., for boda/motorcycle travel)
+📌 Problem Statement
 
-This is ideal for:
-- Riders
-- Delivery drivers
-- Commuters
-- Travel planning tools
+Drivers often make travel decisions without understanding how weather conditions and travel distance affect road safety. Poor visibility, heavy rain, strong winds, and long driving distances significantly increase accident risk, yet this information is rarely combined into a single, easy-to-understand metric.
 
----
+This project aims to solve that problem by providing a Safety Score for a trip between two locations, helping users make safer travel decisions.
 
-## 📦 Features
 
-✔ Fetch live weather by coordinates or place name  
-✔ Fetch routing data (distance + duration) via OpenRouteService  
-✔ Calculate a **weather safety score**  
-✔ Designed for future expansion (traffic, UI maps, etc.)  
-✔ Clear separation of backend routes
+🎯 Solution Overview
 
----
+The Transportation Safety Analyzer:
 
-## 🚀 Getting Started
+Accepts a start and end location (city/place names)
 
-### 1. Clone the repository
+Converts place names into geographic coordinates (geocoding)
 
-```bash
-git clone https://github.com/MohamedHassan-17/Transportation.git
-cd Transportation
-2. Install dependencies
-npm install
+Fetches real-time weather data for both locations
 
-3. Create a .env file
+Calculates a safety score based on:
 
-At the project root, create .env with:
+Visibility
 
-OPENWEATHER_API_KEY=your_openweather_api_key
-ORS_API_KEY=your_openrouteservice_api_key
-PORT=3000
+Wind speed
+
+Rain intensity
+
+Travel distance
+
+Displays:
+
+Weather conditions
+
+Distance between locations
+
+Estimated safety score
+
+The final score reflects the average safety of both locations, adjusted by travel distance.
+🛠️ Technologies Used
+Frontend
+
+HTML
+
+CSS
+
+JavaScript (Vanilla)
+
+Backend
+
+Node.js
+
+Express.js
+
+APIs
+
+OpenWeatherMap API
+
+Geocoding API (place → coordinates)
+
+Weather API (current conditions)
+
+
+🧠 How It Works (Technical Flow)
+
+User enters a start and end location
+
+Frontend sends requests to /geocode
+
+Backend converts place names into coordinates
+
+Weather data is fetched for both locations
+
+Distance is calculated using the Haversine formula
+
+Individual safety scores are calculated
+
+Scores are averaged and adjusted based on distance
+
+Results are displayed to the user
+
+📏 Safety Score Logic
+Base Score
+
+Starts at 100
+
+Weather Adjustments
+
+Visibility penalties for fog or haze
+
+Wind penalties for unsafe speeds
+
+Rain penalties for slippery conditions
+
+Distance Adjustment
+
+Longer distances reduce the score gradually
+
+Short trips still incur a minimum risk penalty
+
+This creates a realistic safety estimate rather than a simple yes/no output.
