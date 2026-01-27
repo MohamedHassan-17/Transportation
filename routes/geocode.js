@@ -4,11 +4,11 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   const { place } = req.query;
-
+// Validate input
   if (!place) {
     return res.status(400).json({ error: "Place name required" });
   }
-
+// Call OpenWeatherMap Geocoding API
   try {
     const url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(
       place
@@ -20,7 +20,7 @@ router.get("/", async (req, res) => {
     if (!data.length) {
       return res.status(404).json({ error: "Location not found" });
     }
-
+// Return the first result
     res.json({
       name: data[0].name,
       lat: data[0].lat,
@@ -31,5 +31,5 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
+// Export the router
 module.exports = router;

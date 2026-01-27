@@ -50,6 +50,17 @@ checkBtn.addEventListener("click", async () => {
     const startWeather = await startWeatherRes.json();
     const endWeather = await endWeatherRes.json();
 
+    // traffic
+
+    const [startTrafficRes, endTrafficRes] = await Promise.all([
+      fetch(`/traffic?lat=${startGeo.lat}&lon=${startGeo.lon}`),
+      fetch(`/traffic?lat=${endGeo.lat}&lon=${endGeo.lon}`)
+    ]);
+
+    const startTraffic = await startTrafficRes.json();
+    const endTraffic = await endTrafficRes.json();
+    console.log("Start Traffic:", startTraffic);
+    console.log("End Traffic:", endTraffic);
     // -------------------------------
     // CALCULATE SCORES
     // -------------------------------
@@ -58,7 +69,7 @@ checkBtn.addEventListener("click", async () => {
     const averageScore = Math.round((startScore + endScore) / 2);
     const distance = Distance(startGeo, endGeo);
     let adjustedScore = 0;
-    if (distance < 200) {
+    if (distance > 200) {
       // Adjust score for short distances
       
       adjustedScore = averageScore - 50;
@@ -90,7 +101,7 @@ checkBtn.addEventListener("click", async () => {
 
     scoreDiv.innerHTML = `
       
-      <h1> Route Safety: ${adjustedScore}</h1>
+      <h1> Route Safety: ${adjustedScore.toFixed(2)}</h1>
     `;
 
   } catch (err) {
